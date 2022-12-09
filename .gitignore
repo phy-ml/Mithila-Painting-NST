@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+$ remove subfolder
+!model/model_weight
+
 # C extensions
 *.so
 

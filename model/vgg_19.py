@@ -2,6 +2,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from utils import toGpu
 
 class VGG19(nn.Module):
     def __init__(self,pool='max'):
@@ -103,4 +104,14 @@ def load_vgg19():
     # load the new state dict into the vgg from my_model
     vgg.load_state_dict(my_model)
 
-    return vgg
+    # switch off the grads
+    for param in vgg.parameters():
+        param.requires_grad = False
+
+    return toGpu(vgg)
+
+# if __name__ == "__main__":
+#     model = load_vgg19().eval()
+#
+#     for param in model.parameters():
+#         print(param.requires_grad)

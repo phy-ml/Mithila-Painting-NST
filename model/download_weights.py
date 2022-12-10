@@ -11,5 +11,3 @@ def download():
     urllib.request.urlretrieve(url,"model_weight/vgg19-dcbb9e9d.pth")
     print('Download finished')
 
-if __name__ == "__main__":
-    download()

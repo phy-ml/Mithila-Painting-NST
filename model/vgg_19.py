@@ -24,7 +24,7 @@ class VGG19(nn.Module):
         self.conv4_3 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
         self.conv4_4 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
 
-        self.conv5_1 = nn.Conv2d(256, 512, kernel_size=3, padding=1)
+        self.conv5_1 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
         self.conv5_2 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
         self.conv5_3 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
         self.conv5_4 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
@@ -72,3 +72,35 @@ class VGG19(nn.Module):
         out['p5'] = self.pool5(out['r54'])
 
         return [out[key] for key in out_key]
+
+# function to load the weights from the downloaded weights from pytorch in custom function
+def load_vgg19():
+    # load the model with initial random weights
+    vgg = VGG19()
+
+    # path of model weight
+    weight_path = f'model/model_weight/vgg19-dcbb9e9d.pth'
+
+    # load the pretrained model with weights
+    pre_trained_model = torch.load(weight_path)
+
+    # convert the pretrained model into a list
+    pre_trained_list = list(pre_trained_model.items())
+
+    # create variable for the current vgg states
+    my_model = vgg.state_dict()
+
+    # initalize count
+    counter = 0
+
+    # iterate through my_model and assign the weight values from the loaded pretrained
+    for key, val in my_model.items():
+        layer_name, weights = pre_trained_list[counter]
+        # set the weights and retain the name
+        my_model[key] = weights
+        counter += 1
+
+    # load the new state dict into the vgg from my_model
+    vgg.load_state_dict(my_model)
+
+    return vgg

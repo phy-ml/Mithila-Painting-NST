@@ -18,7 +18,7 @@ class GramMatrix(nn.Module):
 
 class GramLoss(nn.Module):
     def forward(self, input, target):
-        out = nn.MSELoss()(GramMatrix(x=input), target)
+        out = nn.MSELoss()(GramMatrix()(input), target)
         return out
 
 class ContentLoss(nn.Module):

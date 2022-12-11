@@ -1,22 +1,11 @@
-import torch
 from PIL import Image
 from loss.loss import *
 from model.vgg_19 import *
 from utils import *
 from torch.autograd import Variable
+import torch.optim as optim
+import matplotlib.pyplot as plt
 
-
-# step 1: load the vgg
-# step 2: switch off the gradients for vgg
-# step 3: load model into gpu
-# step 4: load the content and style image
-# step 5: copy content image with grads ON
-# step 6: list the style and content image layer names
-# step 7: compute the vgg output for the style and content layers and store as target
-# step 8: list the weights attached with each layer
-# step 9: set up the optimizer
-# step 10: compute the loss from the optim image
-# step 11: perform backprop on the loss output
 
 class TransferStyle:
     def __init__(self, content, style, img_size=512):
@@ -30,26 +19,104 @@ class TransferStyle:
         # copy the content from content image with grads for optimization img
         self.opt_img = Variable(self.content.data.clone(), requires_grad=True)
 
-    def __call__(self, *args, **kwargs):
-        pass
+    def __call__(self,content_layer, style_layer, iter):
+        self.train(content_layer=content_layer,
+                   style_layer=style_layer,
+                   iter=iter)
 
     def load_model(self):
         self.model = load_vgg19()
 
-    def contentloss(self):
-        pass
+    def contenttarget(self,layer_name):
+        target = [i.detach() for i in self.model(self.content, layer_name)]
+        return target
 
-    def styleloss(self):
-        pass
+    def styletarget(self, layer_name):
+        target = [GramMatrix()(i).detach() for i in self.model(self.style, layer_name)]
+        return target
+
+    def target(self, content_layer, style_layer):
+        style = self.styletarget(layer_name=style_layer)
+        content = self.contenttarget(layer_name=content_layer)
+        return style + content
+
+    def loss_fun(self, content_layer, style_layer):
+        loss_layer = style_layer + content_layer
+        loss_fun_layer = [GramLoss()]*len(style_layer) + [nn.MSELoss()]*len(content_layer)
+        return {'loss_layer':loss_layer,
+                'loss_func':loss_fun_layer}
+
+    def get_loss_weights(self):
+        style_weight = [1e3/n**2 for n in [64,128,256,512,512]]
+        content_weight = [1e0]
+        return style_weight + content_weight
+
+    def train(self, iter, style_layer, content_layer):
+        target = self.target(content_layer=content_layer,style_layer=style_layer)
+
+        #get the loss func
+        loss = self.loss_fun(content_layer=content_layer,style_layer=style_layer)
+        loss_layers = loss['loss_layer']
+        loss_func = loss['loss_func']
+
+        # get the weights for respective layers
+        weights = self.get_loss_weights()
+
+        # get the target for each layer
+        target = self.target(content_layer=content_layer,style_layer=style_layer)
+
+        # define the optimizer
+        optimizer = optim.LBFGS([self.opt_img])
+        max_iter = iter
+        print_iter = 50
+        n_iter = [0]
+
+        while n_iter[0] <= max_iter:
+
+            def closure():
+                # set the grads to be zero
+                optimizer.zero_grad()
+
+                # get the output from the model
+                out = self.model(self.opt_img, loss_layers)
+
+                # get loss from respective sources
+                loss = [weights[i]*loss_func[i](x, target[i]) for i,x in enumerate(out)]
+
+                # sum the loss
+                total_loss = sum(loss)
+                total_loss.backward()
+
+                n_iter[0] += 1
+
+                # print the loss
+                if n_iter[0] % print_iter == (print_iter - 1):
+                    print(f"Iter :{n_iter[0]} ||  Loss :{total_loss.item()}")
+
+                return total_loss
+
+            optimizer.step(closure)
+
+        # get the image out
+        output_img = postp(self.opt_img.data[0].cpu().squeeze())
+        # output_img = output_img.permute(1,2,0).numpy()
+        # show image
+        plt.imshow(output_img)
+        plt.show()
+
+        # save image
+        output_img.save(r'Images/test_1_merge.png')
+
 
 if __name__ == "__main__":
     # load image
-    style_img = Image.open(r'Images/style.png')
+    style_img = Image.open(r"C:\Users\abhishek_tanalink\Downloads\test_1.jpg")
     content_img = Image.open(r'Images/content.png')
 
+    style_layer = ['r11','r21','r31','r41', 'r51']
+    content_layer = ['r42']
+    iter = 500
+
     target = TransferStyle(content=content_img,style=style_img)
-    print(target.style.requires_grad)
-    print(target.content.requires_grad)
-    print(target.opt_img.requires_grad)
-    print([i.requires_grad for i in target.model.parameters()])
+    final = target(iter=iter, content_layer=content_layer, style_layer=style_layer)
 

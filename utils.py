@@ -21,9 +21,19 @@ def post_pros_img(img):
     process = transforms.Compose([transforms.Lambda(lambda x:x.mul_(1/255.)),
                                   transforms.Normalize(mean=[-0.40760392, -0.45795686, -0.48501961],
                                                        std=[1,1,1]),
-                                  transforms.Lambda(lambda x:x[torch.LongTensor([2,1,0])])])
+                                  transforms.Lambda(lambda x:x[torch.LongTensor([2,1,0])]),
+                                  ])
 
     return process(img)
+
+post_pros_2 = transforms.Compose([transforms.ToPILImage()])
+def postp(tensor):
+    t = post_pros_img(tensor)
+    t[t>1] = 1
+    t[t<0] = 0
+    img = post_pros_2(t)
+
+    return img
 
 def toGpu(func):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

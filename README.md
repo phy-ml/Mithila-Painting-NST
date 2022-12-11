@@ -8,4 +8,4 @@ Neural Style Transfer (NST) to generate personalized/customized India Folk Style
  | ![](Images/content/content_3.png) | ![](Images/style/style_2.png) | ![](Images/output/content_3_style_2.png)|
  | ![](Images/content/content_2.png) | ![](Images/style/style_3.png)|![](Images/output/content_2_style_3.png)|
 ## Resources
-1) [Image Style Transfer Using Convolutional Neural Networks ](Image Style Transfer Using Convolutional Neural Networks)
+1) [Image Style Transfer Using Convolutional Neural Networks ](https://ieeexplore.ieee.org/document/7780634)

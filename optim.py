@@ -47,7 +47,7 @@ class TransferStyle:
                 'loss_func':loss_fun_layer}
 
     def get_loss_weights(self):
-        style_weight = [1e3/n**3 for n in [64,128,256,512,512]]
+        style_weight = [1e3/n**2 for n in [64,128,256,512,512]]
         content_weight = [1e0]
         print(sum(style_weight))
         return style_weight + content_weight
@@ -106,7 +106,7 @@ class TransferStyle:
         plt.show()
 
         # save image
-        output_img.save(r'Images/output/content_2_style_3.png')
+        # output_img.save(r'Images/output/content_2_style_3.png')
 
 
 if __name__ == "__main__":
